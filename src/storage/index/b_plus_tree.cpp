@@ -91,7 +91,7 @@ namespace bustub {
   auto BPLUSTREE_TYPE::Insert(const KeyType & key,
     const ValueType & value, Transaction * transaction) -> bool {
       if (transaction != nullptr) {
-        LOG_DEBUG("Trying to aquire wLatch");
+        // LOG_DEBUG("Trying to aquire wLatch");
     rootLatch.WLock();
     transaction -> AddIntoPageSet(nullptr);
       }

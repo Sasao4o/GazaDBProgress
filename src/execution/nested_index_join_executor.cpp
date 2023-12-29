@@ -31,38 +31,49 @@ NestIndexJoinExecutor::NestIndexJoinExecutor(ExecutorContext *exec_ctx, const Ne
 
 void NestIndexJoinExecutor::Init() { child_->Init(); }
 
-auto NestIndexJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  Tuple left_tuple{};
+auto NestIndexJoinExecutor::Next(Tuple **tuple, RID *rid) -> bool {
+  Tuple **left_tuple = new Tuple*[1];
   RID emit_rid{};
   std::vector<Value> vals;
-  while (child_->Next(&left_tuple, &emit_rid)) {
-    Value value = plan_->KeyPredicate()->Evaluate(&left_tuple, child_->GetOutputSchema());
+  while (child_->Next( left_tuple, &emit_rid)) {
+    Value value = plan_->KeyPredicate()->Evaluate(*left_tuple, child_->GetOutputSchema());
     std::vector<RID> rids;
     tree_->ScanKey(Tuple{{value}, index_info_->index_->GetKeySchema()}, &rids, exec_ctx_->GetTransaction());
 
-    Tuple right_tuple{};
+    Tuple * right_tuple = new Tuple();
     if (!rids.empty()) {
-      table_info_->table_->GetTuple(rids[0], &right_tuple, exec_ctx_->GetTransaction());
+           TupleRecord * tupleRecord = dynamic_cast<TupleRecord *>(right_tuple);
+         assert(tupleRecord != nullptr);
+      table_info_->table_->GetTuple(rids[0], tupleRecord, exec_ctx_->GetTransaction());
       for (uint32_t idx = 0; idx < child_->GetOutputSchema().GetColumnCount(); idx++) {
-        vals.push_back(left_tuple.GetValue(&child_->GetOutputSchema(), idx));
+        vals.push_back((*left_tuple)->GetValue(&child_->GetOutputSchema(), idx));
       }
       for (uint32_t idx = 0; idx < plan_->InnerTableSchema().GetColumnCount(); idx++) {
-        vals.push_back(right_tuple.GetValue(&plan_->InnerTableSchema(), idx));
+        vals.push_back(tupleRecord->GetValue(&plan_->InnerTableSchema(), idx));
       }
-      *tuple = Tuple(vals, &GetOutputSchema());
+      delete tupleRecord;
+      *tuple = new Tuple(vals, &GetOutputSchema());
+       delete []left_tuple;
       return true;
     }
     if (plan_->GetJoinType() == JoinType::LEFT) {
       for (uint32_t idx = 0; idx < child_->GetOutputSchema().GetColumnCount(); idx++) {
-        vals.push_back(left_tuple.GetValue(&child_->GetOutputSchema(), idx));
+        vals.push_back((*left_tuple)->GetValue(&child_->GetOutputSchema(), idx));
       }
       for (uint32_t idx = 0; idx < plan_->InnerTableSchema().GetColumnCount(); idx++) {
         vals.push_back(ValueFactory::GetNullValueByType(plan_->InnerTableSchema().GetColumn(idx).GetType()));
       }
-      *tuple = Tuple(vals, &GetOutputSchema());
+      *tuple = new Tuple(vals, &GetOutputSchema());
+      delete right_tuple;
+      delete []left_tuple;
       return true;
     }
+ 
+    delete right_tuple;
   }
+  
+  delete *left_tuple ;
+  delete []left_tuple;
   return false;
 }
 

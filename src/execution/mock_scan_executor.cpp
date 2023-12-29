@@ -396,15 +396,15 @@ void MockScanExecutor::Init() {
   cursor_ = 0;
 }
 
-auto MockScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+auto MockScanExecutor::Next(Tuple **tuple, RID *rid) -> bool {
   if (cursor_ == size_) {
     // Scan complete
     return EXECUTOR_EXHAUSTED;
   }
   if (shuffled_idx_.empty()) {
-    *tuple = func_(cursor_);
+    **tuple = func_(cursor_);
   } else {
-    *tuple = func_(shuffled_idx_[cursor_]);
+    **tuple = func_(shuffled_idx_[cursor_]);
   }
   ++cursor_;
   *rid = MakeDummyRID();

@@ -35,7 +35,7 @@ void TablePage::Init(page_id_t page_id, uint32_t page_size, page_id_t prev_page_
   SetTupleCount(0);
 }
 
-auto TablePage::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn, LockManager *lock_manager,
+auto TablePage::InsertTuple(const TupleRecord &tuple, RID *rid, Transaction *txn, LockManager *lock_manager,
                             LogManager *log_manager) -> bool {
   BUSTUB_ASSERT(tuple.size_ > 0, "Cannot have empty tuples.");
   // If there is not enough space, then return false.
@@ -136,7 +136,7 @@ auto TablePage::MarkDelete(const RID &rid, Transaction *txn, LockManager *lock_m
   return true;
 }
 
-auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID &rid, Transaction *txn,
+auto TablePage::UpdateTuple(const TupleRecord &new_tuple, TupleRecord *old_tuple, const RID &rid, Transaction *txn,
                             LockManager *lock_manager, LogManager *log_manager) -> bool {
   BUSTUB_ASSERT(new_tuple.size_ > 0, "Cannot have empty tuples.");
   uint32_t slot_num = rid.GetSlotNum();
@@ -223,7 +223,7 @@ void TablePage::ApplyDelete(const RID &rid, Transaction *txn, LogManager *log_ma
   // Otherwise we are rolling back an insert.
 
   // We need to copy out the deleted tuple for undo purposes.
-  Tuple delete_tuple;
+  TupleRecord delete_tuple;
   delete_tuple.size_ = tuple_size;
   delete_tuple.data_ = new char[delete_tuple.size_];
   memcpy(delete_tuple.data_, GetData() + tuple_offset, delete_tuple.size_);
@@ -284,7 +284,7 @@ void TablePage::RollbackDelete(const RID &rid, Transaction *txn, LogManager *log
   }
 }
 
-auto TablePage::GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, LockManager *lock_manager) -> bool {
+auto TablePage::GetTuple(const RID &rid, TupleRecord *tuple, Transaction *txn, LockManager *lock_manager) -> bool {
   // Get the current slot number.
   uint32_t slot_num = rid.GetSlotNum();
   // If somehow we have more slots than tuples, abort the transaction.

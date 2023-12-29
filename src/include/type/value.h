@@ -21,7 +21,7 @@
 
 #include "type/limits.h"
 #include "type/type.h"
-
+#include "common/logger.h"
 namespace bustub {
 
 inline auto GetCmpBool(bool boolean) -> CmpBool { return boolean ? CmpBool::CmpTrue : CmpBool::CmpFalse; }
@@ -125,7 +125,9 @@ class Value {
 
   inline auto OperateNull(const Value &o) const -> Value { return Type::GetInstance(type_id_)->OperateNull(*this, o); }
   inline auto IsZero() const -> bool { return Type::GetInstance(type_id_)->IsZero(*this); }
-  inline auto IsNull() const -> bool { return size_.len_ == BUSTUB_VALUE_NULL; }
+  inline auto IsNull() const -> bool {
+    //LOG_DEBUG("Checking if Value is Null"); 
+  return size_.len_ == BUSTUB_VALUE_NULL; }
 
   // Serialize this value into the given storage space. The inlined parameter
   // indicates whether we are allowed to inline this value into the storage

@@ -46,7 +46,7 @@ class FilterExecutor : public AbstractExecutor {
    * @param[out] rid The next tuple RID produced by the filter
    * @return `true` if a tuple was produced, `false` if there are no more tuples
    */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the filter plan */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }

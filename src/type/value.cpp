@@ -223,15 +223,9 @@ Value::Value(TypeId type, const char *data, uint32_t len, bool manage_data) : Va
         if (manage_data_) {
           assert(len < BUSTUB_VARCHAR_MAX_LEN);
           value_.varlen_ = new char[len];
-           
           assert(value_.varlen_ != nullptr);
           size_.len_ = len;
-            // for (uint32_t i = 0; i < len; i++) {
-            //   LOG_DEBUG("%c", data[i]);
-            // }
-            // LOG_DEBUG("________________________________________________________________________________1%d",len);
           memcpy(value_.varlen_, data, len);
-            // LOG_DEBUG("________________________________________________________________________________2");
         } else {
           // FUCK YOU GCC I do what I want.
           value_.const_varlen_ = data;
@@ -245,6 +239,7 @@ Value::Value(TypeId type, const char *data, uint32_t len, bool manage_data) : Va
 }
 
 Value::Value(TypeId type, const std::string &data) : Value(type) {
+  // LOG_DEBUG("CONSTRUCTING STRINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
   switch (type) {
     case TypeId::VARCHAR: {
       manage_data_ = true;

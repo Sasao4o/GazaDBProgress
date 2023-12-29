@@ -29,14 +29,19 @@ index = 0;
 
  }
 
-auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+auto IndexScanExecutor::Next(Tuple **tuple, RID *rid) -> bool {
  
     if ((size_t)index >= recordsIds.size()) return false;
     ExecutorContext *exec_ctx = this->GetExecutorContext();
     Catalog *catalog = exec_ctx->GetCatalog();
     IndexInfo* indexInfo = catalog->GetIndex(plan_->GetIndexOid());
     TableInfo *table_info = exec_ctx_->GetCatalog()->GetTable(indexInfo->table_name_);
-    table_info->table_->GetTuple(recordsIds[index], tuple, exec_ctx->GetTransaction());
+    TupleRecord * tupleRecord = new TupleRecord();
+  
+    assert(tupleRecord != nullptr);
+    table_info->table_->GetTuple(recordsIds[index], tupleRecord, exec_ctx->GetTransaction());
+   
+    *tuple = tupleRecord;
     index++;
     return true;
 }

@@ -23,7 +23,7 @@ void LimitExecutor::Init() {
   cnt_ = 0;
 }
 
-auto LimitExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+auto LimitExecutor::Next(Tuple **tuple, RID *rid) -> bool {
   if ((size_t)cnt_ >= plan_->GetLimit()) {
     return false;
   }

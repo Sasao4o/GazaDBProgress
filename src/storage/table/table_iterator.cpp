@@ -19,7 +19,7 @@
 namespace bustub {
 
 TableIterator::TableIterator(TableHeap *table_heap, RID rid, Transaction *txn)
-    : table_heap_(table_heap), tuple_(new Tuple(rid)), txn_(txn) {
+    : table_heap_(table_heap), tuple_(new TupleRecord(rid)), txn_(txn) {
   if (rid.GetPageId() != INVALID_PAGE_ID) {
     if (!table_heap_->GetTuple(tuple_->rid_, tuple_, txn_)) {
       throw bustub::Exception("read non-existing tuple");
@@ -27,12 +27,12 @@ TableIterator::TableIterator(TableHeap *table_heap, RID rid, Transaction *txn)
   }
 }
 
-auto TableIterator::operator*() -> const Tuple & {
+auto TableIterator::operator*() -> const TupleRecord & {
   assert(*this != table_heap_->End());
   return *tuple_;
 }
 
-auto TableIterator::operator->() -> Tuple * {
+auto TableIterator::operator->() -> TupleRecord * {
   assert(*this != table_heap_->End());
   return tuple_;
 }

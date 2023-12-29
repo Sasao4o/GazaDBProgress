@@ -18,12 +18,12 @@
 #include <random>
 #include <vector>
 
-#include "storage/table/tuple.h"
+#include "storage/table/tuple_record.h"
 
 namespace bustub {
 
 // use a fixed schema to construct a random tuple
-auto ConstructTuple(Schema *schema) -> Tuple {
+auto ConstructTuple(Schema *schema) -> TupleRecord {
   std::vector<Value> values;
   Value v(TypeId::INVALID);
 

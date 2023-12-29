@@ -25,7 +25,7 @@
 #include "execution/plans/aggregation_plan.h"
 #include "storage/table/tuple.h"
 #include "type/value_factory.h"
-
+ 
 namespace bustub {
 
 /**
@@ -199,7 +199,7 @@ class AggregationExecutor : public AbstractExecutor {
    * @param[out] rid The next tuple RID produced by the aggregation
    * @return `true` if a tuple was produced, `false` if there are no more tuples
    */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the aggregation */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };

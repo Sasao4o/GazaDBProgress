@@ -239,77 +239,83 @@ NestedLoopJoinExecutor::NestedLoopJoinExecutor(ExecutorContext *exec_ctx, const 
   }
 }
 void NestedLoopJoinExecutor::Init() { 
-      Tuple childTuple;
+      Tuple **childTuple = new Tuple*[1];
       RID childRID;
       left_executor_->Init();
       right_executor_->Init();
-      while (left_executor_->Next(&childTuple, &childRID)) {
-        leftTuples.push_back(childTuple);
+      while (left_executor_->Next(childTuple, &childRID)) {
+        leftTuples.push_back(**childTuple);
       }
     
-       
+          delete []childTuple;
       // currentLeftTupleIndex = 0;
       //Line 251 cost me 5 hours to catch that its bug :D  (as the parent might be join if he use init as in the next it will reset the currentLeftTuple causing many many duplicates)
 }
 
-auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool { 
+auto NestedLoopJoinExecutor::Next(Tuple **tuple, RID *rid) -> bool { 
   //Note we use while (1) loop as nested loop join is a pipeline breaker!
  
   
   while(true ) {
    std::vector<Value> values{};
-  Tuple rightChildTuple;
+      Tuple **rightChildTuple = new Tuple*[1];
   RID rightChildRID;
   RID leftChildRID;
   if ((size_t)currentLeftTupleIndex >= leftTuples.size()) return false;
   if (plan_->GetJoinType() == JoinType::INNER) {
  
-    if (right_executor_->Next(&rightChildTuple, &rightChildRID)) {
-      auto ret = plan_->Predicate().EvaluateJoin(&leftTuples[currentLeftTupleIndex], left_executor_->GetOutputSchema(), &rightChildTuple,
+    if (right_executor_->Next(rightChildTuple, &rightChildRID)) {
+      auto ret = plan_->Predicate().EvaluateJoin(&leftTuples[currentLeftTupleIndex], left_executor_->GetOutputSchema(), *rightChildTuple,
                                                right_executor_->GetOutputSchema());
       if (!ret.IsNull() && ret.GetAs<bool>())  {
-      JoinTuples(rightChildTuple, values);
-      *tuple = Tuple{values, &GetOutputSchema()};
-      *rid = tuple->GetRid();
+      JoinTuples(**rightChildTuple, values);
+      *tuple = new Tuple(values, &GetOutputSchema());
+      *rid = (*tuple)->GetRid();
+      delete []rightChildTuple;
       return true;
       }
+      delete []rightChildTuple;
       continue;
     }
     //Here means no right element suitable to our current left
       right_executor_->Init(); // Move the cursor again to first element in the right table
       currentLeftTupleIndex++;
-  
+     delete []rightChildTuple;
       continue;
   } else if (plan_->GetJoinType() == JoinType::LEFT) {
-      if (right_executor_->Next(&rightChildTuple, &rightChildRID)) {
-      auto ret = plan_->Predicate().EvaluateJoin(&leftTuples[currentLeftTupleIndex], left_executor_->GetOutputSchema(), &rightChildTuple,
+      if (right_executor_->Next(rightChildTuple, &rightChildRID)) {
+      auto ret = plan_->Predicate().EvaluateJoin(&leftTuples[currentLeftTupleIndex], left_executor_->GetOutputSchema(), *rightChildTuple,
                                                right_executor_->GetOutputSchema());
       if (ret.IsNull() || !ret.GetAs<bool>()) continue;
-      JoinTuples(rightChildTuple, values);
-      *tuple = Tuple{values, &GetOutputSchema()};
-      *rid = tuple->GetRid();
+      JoinTuples(**rightChildTuple, values);
+      *tuple = new Tuple(values, &GetOutputSchema());
+      *rid = (*tuple)->GetRid();
     
       leftDone = true;
-    
+    delete []rightChildTuple;
       return true;
     }
     if (!leftDone) {
       //we need to insert nulls to the left tuple
-      *tuple = MergeWithNulls();
-      *rid = tuple->GetRid();
+      **tuple = MergeWithNulls();
+      *rid = (*tuple)->GetRid();
        currentLeftTupleIndex++;
        right_executor_->Init(); 
        leftDone = false;
+       delete []rightChildTuple;
        return true;
     } else {
       leftDone = false;
       currentLeftTupleIndex++;
        right_executor_->Init(); 
+       delete []rightChildTuple;
        continue;
     }
     
   }
 
+
+      delete []rightChildTuple;
   }
   
 }

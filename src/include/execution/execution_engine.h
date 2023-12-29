@@ -50,7 +50,7 @@ class ExecutionEngine {
    * @return `true` if execution of the query plan succeeds, `false` otherwise
    */
   // NOLINTNEXTLINE
-  auto Execute(const AbstractPlanNodeRef &plan, std::vector<Tuple> *result_set, Transaction *txn,
+  auto Execute(const AbstractPlanNodeRef &plan, std::vector<Tuple*> *result_set, Transaction *txn,
                ExecutorContext *exec_ctx) -> bool {
     BUSTUB_ASSERT((txn == exec_ctx->GetTransaction()), "Broken Invariant");
 
@@ -84,14 +84,16 @@ class ExecutionEngine {
    * @param result_set The tuple result set
    */
   static void PollExecutor(AbstractExecutor *executor, const AbstractPlanNodeRef &plan,
-                           std::vector<Tuple> *result_set) {
+                           std::vector<Tuple *> *result_set) {
     RID rid{};
-    Tuple tuple{};
-    while (executor->Next(&tuple, &rid)) {
+    
+    Tuple **tuple = new Tuple*[1];
+    while (executor->Next(tuple, &rid)) {
       if (result_set != nullptr) {
-        result_set->push_back(tuple);
-      }
+        result_set->push_back(*tuple);
+      }  
     }
+    delete []tuple;
   }
 
   [[maybe_unused]] BufferPoolManager *bpm_;

@@ -67,12 +67,14 @@ void SeqScanExecutor::Init() {
               ->table_->Begin(GetExecutorContext()->GetTransaction());
 }
 
-auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+auto SeqScanExecutor::Next(Tuple **tuple, RID *rid) -> bool {
   if (iter_ == GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid())->table_->End()) {
     return false;
   }
-
-  *tuple = *iter_;
+  TupleRecord *tupleRecord = new TupleRecord();
+  *tupleRecord = *iter_;
+ 
+  *tuple = tupleRecord;
   *rid = iter_->GetRid();
   iter_++;
   return true;

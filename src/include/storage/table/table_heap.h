@@ -16,7 +16,7 @@
 #include "recovery/log_manager.h"
 #include "storage/page/table_page.h"
 #include "storage/table/table_iterator.h"
-#include "storage/table/tuple.h"
+#include "storage/table/tuple_record.h"
 
 namespace bustub {
 
@@ -57,7 +57,7 @@ class TableHeap {
    * @param txn the transaction performing the insert
    * @return true iff the insert is successful
    */
-  auto InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> bool;
+  auto InsertTuple(const TupleRecord &tuple, RID *rid, Transaction *txn) -> bool;
 
   /**
    * Mark the tuple as deleted. The actual delete will occur when ApplyDelete is called.
@@ -74,7 +74,7 @@ class TableHeap {
    * @param txn transaction performing the update
    * @return true is update is successful.
    */
-  auto UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn) -> bool;
+  auto UpdateTuple(const TupleRecord &tuple, const RID &rid, Transaction *txn) -> bool;
 
   /**
    * Called on Commit/Abort to actually delete a tuple or rollback an insert.
@@ -97,7 +97,7 @@ class TableHeap {
    * @param txn transaction performing the read
    * @return true if the read was successful (i.e. the tuple exists)
    */
-  auto GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, bool acquire_read_lock = true) -> bool;
+  auto GetTuple(const RID &rid, TupleRecord *tuple, Transaction *txn, bool acquire_read_lock = true) -> bool;
    char* MergeData(char* ptr1, uint32_t size1, char* ptr2, uint32_t size2);
    void SplitData(char*data, int length ,char**dest1,int length1,char**dest2,int length2);
   /** @return the begin iterator of this table */

@@ -45,10 +45,10 @@ auto main(int argc, char **argv) -> int {
     }
   }
 
-  // bustub->GenerateMockTable(); //LOOKHERE
+    bustub->GenerateMockTable(); //LOOKHERE
 
   if (bustub->buffer_pool_manager_ != nullptr) {
-    // bustub->GenerateTestTable();
+      bustub->GenerateTestTable();
   }
 
   std::cout << "Welcome to the BusTub shell! Type \\help to learn more." << std::endl << std::endl;

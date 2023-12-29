@@ -18,7 +18,7 @@
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/seq_scan_plan.h"
 #include "execution/plans/values_plan.h"
-#include "storage/table/tuple.h"
+#include "storage/table/tuple_record.h"
 
 namespace bustub {
 
@@ -43,7 +43,7 @@ class ValuesExecutor : public AbstractExecutor {
    * @param[out] rid The next tuple RID produced by the values, not used by values executor
    * @return `true` if a tuple was produced, `false` if there are no more tuples
    */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the values */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }

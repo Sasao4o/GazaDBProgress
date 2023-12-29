@@ -158,9 +158,10 @@ auto VarlenType::ToString(const Value &val) const -> std::string {
 void VarlenType::SerializeTo(const Value &val, char *storage) const {
   uint32_t len = GetLength(val);
   if (len == BUSTUB_VALUE_NULL) {
-    memcpy(storage, &len, sizeof(uint32_t));
+    // memcpy(storage, &len, sizeof(uint32_t));
     return;
   }
+  //Size | Data
   memcpy(storage, &len, sizeof(uint32_t));
   memcpy(storage + sizeof(uint32_t), val.value_.varlen_, len);
 }

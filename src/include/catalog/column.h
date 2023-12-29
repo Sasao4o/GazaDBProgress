@@ -117,7 +117,7 @@ class Column {
         return 8;
       case TypeId::VARCHAR:
       //LOOKHERE
-        // TODO(Amadou): Confirm this.
+        // TODO(Amadou): Confirm this. 2^12 = 4096 (BUSTUB_PAGE_SIZE)
         return 12;
       default: {
         UNREACHABLE("Cannot get size of invalid type");

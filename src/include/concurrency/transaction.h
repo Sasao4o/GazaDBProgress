@@ -23,8 +23,8 @@
 #include "common/config.h"
 #include "common/logger.h"
 #include "storage/page/page.h"
-#include "storage/table/tuple.h"
-
+ 
+#include "storage/table/tuple_record.h"
 namespace bustub {
 
 /**
@@ -64,13 +64,13 @@ using index_oid_t = uint32_t;
  */
 class TableWriteRecord {
  public:
-  TableWriteRecord(RID rid, WType wtype, const Tuple &tuple, TableHeap *table)
+  TableWriteRecord(RID rid, WType wtype, const TupleRecord &tuple, TableHeap *table)
       : rid_(rid), wtype_(wtype), tuple_(tuple), table_(table) {}
 
   RID rid_;
   WType wtype_;
   /** The tuple is only used for the update operation. */
-  Tuple tuple_;
+  TupleRecord tuple_;
   /** The table heap specifies which table this write record is for. */
   TableHeap *table_;
 };

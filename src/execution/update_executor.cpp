@@ -35,15 +35,16 @@ void UpdateExecutor::Init() {
   }
 }
 
-auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
+auto UpdateExecutor::Next([[maybe_unused]] Tuple **tuple, RID *rid) -> bool {
   if (is_end_) {
     return false;
   }
-  Tuple old_tuple{};
+  
+         Tuple **old_tuple = new Tuple*[1];
   RID old_rid;
   int32_t update_count = 0;
 
-  while (child_executor_->Next(&old_tuple, &old_rid)) {
+  while (child_executor_->Next(old_tuple, &old_rid)) {
     try {
       bool is_locked = exec_ctx_->GetLockManager()->LockRow(
           exec_ctx_->GetTransaction(), LockManager::LockMode::EXCLUSIVE, table_info_->oid_, old_rid);
@@ -57,10 +58,10 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
     std::vector<Value> values{};
     values.reserve(child_executor_->GetOutputSchema().GetColumnCount());
     for (const auto &expr : plan_->target_expressions_) {
-      values.push_back(expr->Evaluate(&old_tuple, child_executor_->GetOutputSchema()));
+      values.push_back(expr->Evaluate(*old_tuple, child_executor_->GetOutputSchema()));
     }
 
-    auto to_update_tuple = Tuple{values, &child_executor_->GetOutputSchema()};
+    auto to_update_tuple = TupleRecord{values, &child_executor_->GetOutputSchema()};
 
     bool updated = table_info_->table_->UpdateTuple(to_update_tuple, old_rid, exec_ctx_->GetTransaction());
 
@@ -71,7 +72,7 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   std::vector<Value> values{};
   values.reserve(GetOutputSchema().GetColumnCount());
   values.emplace_back(TypeId::INTEGER, update_count);
-  *tuple = Tuple{values, &GetOutputSchema()};
+  *tuple = new Tuple(values, &GetOutputSchema());
   is_end_ = true;
   return true;
 }

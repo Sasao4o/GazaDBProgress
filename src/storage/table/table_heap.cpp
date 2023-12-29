@@ -36,7 +36,7 @@ TableHeap::TableHeap(BufferPoolManager *buffer_pool_manager, LockManager *lock_m
   buffer_pool_manager_->UnpinPage(first_page_id_, true);
 }
 
-auto TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> bool {
+auto TableHeap::InsertTuple(const TupleRecord &tuple, RID *rid, Transaction *txn) -> bool {
  
   auto cur_page = static_cast<TablePage *>(buffer_pool_manager_->FetchPage(first_page_id_));
   if (cur_page == nullptr) {
@@ -83,7 +83,7 @@ auto TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> b
       buffer_pool_manager_->UnpinPage(cur_page->GetTablePageId(), true);
 
       //Split the Tuple 
-       Tuple leftTuple;
+       TupleRecord leftTuple;
        size_t tupleInPageSize = BUSTUB_PAGE_SIZE - 32; //this 32 for slotted page metadata (why i am aware of this in the heap? LOOKHERE)
        char*overFlowedData;
        SplitData(tuple.data_, tuple.size_, &leftTuple.data_, tupleInPageSize, &overFlowedData, tuple.size_ - tupleInPageSize);
@@ -132,7 +132,7 @@ auto TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> b
 
        }
    
-       txn->GetWriteSet()->emplace_back(*rid, WType::INSERT, Tuple{}, this);
+       txn->GetWriteSet()->emplace_back(*rid, WType::INSERT, TupleRecord{}, this);
        
        return result;
   } 
@@ -176,7 +176,7 @@ auto TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> b
   cur_page->WUnlatch(); //by3ml unlatch ll newpage yo3tbr
   buffer_pool_manager_->UnpinPage(cur_page->GetTablePageId(), true);
   // Update the transaction's write set.
-  txn->GetWriteSet()->emplace_back(*rid, WType::INSERT, Tuple{}, this);
+  txn->GetWriteSet()->emplace_back(*rid, WType::INSERT, TupleRecord{}, this);
   return true;
 }
 
@@ -195,11 +195,11 @@ auto TableHeap::MarkDelete(const RID &rid, Transaction *txn) -> bool {
   page->WUnlatch();
   buffer_pool_manager_->UnpinPage(page->GetTablePageId(), true);
   // Update the transaction's write set.
-  txn->GetWriteSet()->emplace_back(rid, WType::DELETE, Tuple{}, this);
+  txn->GetWriteSet()->emplace_back(rid, WType::DELETE, TupleRecord{}, this);
   return true;
 }
 
-auto TableHeap::UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn) -> bool {
+auto TableHeap::UpdateTuple(const TupleRecord &tuple, const RID &rid, Transaction *txn) -> bool {
   // Find the page which contains the tuple.
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
   // If the page could not be found, then abort the transaction.
@@ -208,7 +208,7 @@ auto TableHeap::UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn
     return false;
   }
   // Update the tuple; but first save the old value for rollbacks.
-  Tuple old_tuple;
+  TupleRecord old_tuple;
   page->WLatch();
   bool is_updated = page->UpdateTuple(tuple, &old_tuple, rid, txn, lock_manager_, log_manager_);
   uint32_t freeSpace = page->GetFreeSpaceRemaining();
@@ -221,7 +221,7 @@ auto TableHeap::UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn
            return false;
      }
      is_updated = this->InsertTuple(tuple, &insertedRid, txn);
-     LOG_DEBUG("ISSSSSS uPDATED %d", is_updated);
+    //  LOG_DEBUG("ISSSSSS uPDATED %d", is_updated);
   }
   
    
@@ -282,7 +282,7 @@ void TableHeap::SplitData(char*data, int length ,char**dest1,int length1,char**d
        std::memcpy(*dest1, data, length1);
        std::memcpy(*dest2, data + length1, length2);
 } 
-auto TableHeap::GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, bool acquire_read_lock) -> bool {
+auto TableHeap::GetTuple(const RID &rid, TupleRecord *tuple, Transaction *txn, bool acquire_read_lock) -> bool {
   // Find the page which contains the tuple.
  
   auto page = static_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));

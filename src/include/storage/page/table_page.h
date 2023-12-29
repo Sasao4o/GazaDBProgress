@@ -81,7 +81,7 @@ class TablePage : public Page {
    * @param log_manager the log manager
    * @return true if the insert is successful (i.e. there is enough space)
    */
-  auto InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn, LockManager *lock_manager, LogManager *log_manager)
+  auto InsertTuple(const TupleRecord &tuple, RID *rid, Transaction *txn, LockManager *lock_manager, LogManager *log_manager)
       -> bool;
 
   /**
@@ -104,7 +104,7 @@ class TablePage : public Page {
    * @param log_manager the log manager
    * @return true if updating the tuple succeeded
    */
-  auto UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID &rid, Transaction *txn,
+  auto UpdateTuple(const TupleRecord &new_tuple, TupleRecord *old_tuple, const RID &rid, Transaction *txn,
                    LockManager *lock_manager, LogManager *log_manager) -> bool;
 
   /** To be called on commit or abort. Actually perform the delete or rollback an insert. */
@@ -121,7 +121,7 @@ class TablePage : public Page {
    * @param lock_manager the lock manager
    * @return true if the read is successful (i.e. the tuple exists)
    */
-  auto GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, LockManager *lock_manager) -> bool;
+  auto GetTuple(const RID &rid, TupleRecord *tuple, Transaction *txn, LockManager *lock_manager) -> bool;
 
   /** @return the rid of the first tuple in this page */
 

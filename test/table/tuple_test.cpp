@@ -47,7 +47,7 @@ TEST(TupleTest, TableHeapTest) {
   Column col5{"e", TypeId::VARCHAR, 16};
   std::vector<Column> cols{col1, col2, col3, col4, col5};
   Schema schema{cols};
-  Tuple tuple = ConstructTuple(&schema);
+  TupleRecord tuple = ConstructTuple(&schema);
 
   // create transaction
   auto *transaction = new Transaction(0);
@@ -148,7 +148,7 @@ TEST(TupleTest, TableHeapLargeInsertion) {
     values.emplace_back(v);
   }
   // END ADD VALUES
-  Tuple tuple(values, &schema);
+  TupleRecord tuple(values, &schema);
 
 
 
@@ -173,7 +173,7 @@ TEST(TupleTest, TableHeapLargeInsertion) {
   TableIterator itr = table->Begin(transaction);
  
     // std::cout << itr->ToString(schema) << std::endl;
-    Tuple tuple2 = *itr;
+    TupleRecord tuple2 = *itr;
  
     EXPECT_EQ(tuple2.GetValue(&schema,0).CompareEquals(values[0]), CmpBool::CmpTrue);
     EXPECT_EQ(tuple2.GetValue(&schema,1).CompareEquals(values[1]), CmpBool::CmpTrue);
@@ -261,7 +261,7 @@ TEST(TupleTest,  TableHeapMultipleLargeInsertion) {
     values.emplace_back(v);
   }
   // END ADD VALUES
-  Tuple tuple(values, &schema);
+  TupleRecord tuple(values, &schema);
 
 
 
@@ -286,7 +286,7 @@ TEST(TupleTest,  TableHeapMultipleLargeInsertion) {
   TableIterator itr = table->Begin(transaction);
  
   //   // std::cout << itr->ToString(schema) << std::endl;
-    Tuple tuple2 = *itr;
+    TupleRecord tuple2 = *itr;
  
     EXPECT_EQ(tuple2.GetValue(&schema,0).CompareEquals(values[0]), CmpBool::CmpTrue);
     EXPECT_EQ(tuple2.GetValue(&schema,1).CompareEquals(values[1]), CmpBool::CmpTrue);
@@ -366,7 +366,7 @@ TEST(TupleTest,  TableHeapUpdate) {
     values.emplace_back(v);
   }
   // END ADD VALUES
-  Tuple tuple(values, &schema);
+  TupleRecord tuple(values, &schema);
 
 
 
@@ -391,7 +391,7 @@ TEST(TupleTest,  TableHeapUpdate) {
   TableIterator itr = table->Begin(transaction);
  
   //   // std::cout << itr->ToString(schema) << std::endl;
-    Tuple tuple2 = *itr;
+    TupleRecord tuple2 = *itr;
  
     EXPECT_EQ(tuple2.GetValue(&schema,0).CompareEquals(values[0]), CmpBool::CmpTrue);
     EXPECT_EQ(tuple2.GetValue(&schema,1).CompareEquals(values[1]), CmpBool::CmpTrue);
@@ -416,14 +416,14 @@ TEST(TupleTest,  TableHeapUpdate) {
   values.push_back(v);
 
 
-   auto to_update_tuple = Tuple{values, &schema};
+   auto to_update_tuple = TupleRecord{values, &schema};
 
     bool updated =  table->UpdateTuple(to_update_tuple, rid, transaction);
   assert(updated==true);
   TableIterator itr2 = table->Begin(transaction);
  
   //   // std::cout << itr->ToString(schema) << std::endl;
-    Tuple tuple3 = *itr2;
+    TupleRecord tuple3 = *itr2;
  
       EXPECT_EQ(tuple3.GetValue(&schema,0).CompareEquals(values[0]), CmpBool::CmpTrue);
     EXPECT_EQ(tuple3.GetValue(&schema,1).CompareEquals(values[1]), CmpBool::CmpTrue);
@@ -454,4 +454,120 @@ TEST(TupleTest,  TableHeapUpdate) {
 
 
 
+TEST(TupleTest, TableInsertMostafaString) {
+  // test1: parse create sql statement
+  std::string create_stmt = "a varchar(20), b smallint, c bigint, d bool, e varchar(16)";
+  Column col1{"a", TypeId::VARCHAR, 20};
+  Column col2{"b", TypeId::SMALLINT};
+ 
+  std::vector<Column> colsforTest{col1, col2};
+   Schema schemaForTest{colsforTest};
+ 
+
+ 
+ 
+ 
+  int overFlowedSize = BUSTUB_PAGE_SIZE / 2;
+ char overFlowedData[BUSTUB_PAGE_SIZE / 2];
+  GetRandomString(overFlowedData, overFlowedSize);
+  std::vector<Value> values;
+  Value v(TypeId::INVALID);
+
+  auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+  std::mt19937 generator(seed);  // mt19937 is a standard mersenne_twister_engine
+
+  for (uint32_t i = 0; i < schemaForTest.GetColumnCount(); i++) {
+    // get type
+    const auto &col = schemaForTest.GetColumn(i);
+    TypeId type = col.GetType();
+    switch (type) {
+      case TypeId::BOOLEAN:
+        v = Value(type, 1);
+        break;
+      case TypeId::TINYINT:
+        v = Value(type, 12);
+        break;
+      case TypeId::SMALLINT:
+        v = Value(type, 13);
+        break;
+      case TypeId::INTEGER:
+        v = Value(type, 14);
+        break;
+      case TypeId::BIGINT:
+        v = Value(type, 17);
+        break;
+      case TypeId::VARCHAR: {
+  
+        v = Value(type, nullptr,0,false);
+        break;
+      }
+      default:
+        break;
+    }
+    values.emplace_back(v);
+  }
+  // END ADD VALUES
+   
+
+   //Keyschema Test
+  // TupleRecord tuple(values, &schemaForTest);
+  //   LOG_DEBUG("The size of real tuple is %d", tuple.GetLength());
+  // auto keySchema = Schema::CopySchema(&schemaForTest, {0});
+  // TupleRecord testTuple = tuple.KeyFromTuple(schemaForTest, keySchema, {0});
+  // EXPECT_EQ(testTuple.GetLength(), 2);
+  // create transaction
+  auto *transaction = new Transaction(0);
+  auto *disk_manager = new DiskManager("test.db");
+  auto *buffer_pool_manager = new BufferPoolManagerInstance(50, disk_manager);
+  auto *lock_manager = new LockManager();
+  auto *log_manager = new LogManager(disk_manager);
+  auto *table = new TableHeap(buffer_pool_manager, lock_manager, log_manager, transaction);
+
+  // std::vector<RID> rid_v;
+  // //  LOG_DEBUG("Tuble Size is %d", tuple.GetLength());
+  // for (int i = 0; i < 1; ++i) { 
+  //     // LOG_DEBUG("%d", i);
+  //   RID rid;
+  //   assert(table->InsertTuple(tuple, &rid, transaction) == true);
+  //   rid_v.push_back(rid);
+  // }
+  // // LOG_DEBUG("Tuples are inserted sucessfullyy!!!");
+  // TableIterator itr = table->Begin(transaction);
+ 
+  //   // std::cout << itr->ToString(schema) << std::endl;
+  //   Tuple tuple2 = *itr;
+ 
+  //   EXPECT_EQ(tuple2.GetValue(&schema,0).CompareEquals(values[0]), CmpBool::CmpNull);
+  //   EXPECT_EQ(tuple2.GetValue(&schema,1).CompareEquals(values[1]), CmpBool::CmpTrue);
+  //   EXPECT_EQ(tuple2.GetValue(&schema,2).CompareEquals(values[2]), CmpBool::CmpTrue);
+  //   EXPECT_EQ(tuple2.GetValue(&schema,3).CompareEquals(values[3]), CmpBool::CmpTrue);
+  //   EXPECT_EQ(tuple2.GetValue(&schema,4).CompareEquals(values[4]), CmpBool::CmpNull);
+  //   // LOG_DEBUG("%s", tuple2.GetValue(&schema,4).GetData());
+  //   EXPECT_EQ(tuple2.GetValue(&schema, 4).IsNull(), true);
+  //   EXPECT_EQ(tuple2.isColNull(&schema,0), true);
+  //   EXPECT_EQ(tuple2.isColNull(&schema,1), false);
+  //   EXPECT_EQ(tuple2.isColNull(&schema,4), true);
+  //   Value x(VARCHAR, nullptr,0,false);
+  //   EXPECT_EQ(x.IsNull(), true);
+  //   ++itr;
+ 
+  // // int i = 0;
+  // std::shuffle(rid_v.begin(), rid_v.end(), std::default_random_engine(0));
+  // for (const auto &rid : rid_v) {
+  //   // std::cout << i++ << std::endl;
+  //   BUSTUB_ENSURE(table->MarkDelete(rid, transaction) == 1, "");
+  // }
+  disk_manager->ShutDown();
+  remove("test.db");  // remove db file
+  remove("test.log");
+  delete table;
+  delete buffer_pool_manager;
+  delete disk_manager;
+  delete transaction;
+  delete log_manager;
+  delete lock_manager;
+}
+
+ 
 }  // namespace bustub

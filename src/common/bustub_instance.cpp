@@ -220,7 +220,7 @@ auto BustubInstance::ExecuteSqlTxn(const std::string &sql, ResultWriter &writer,
           throw bustub::Exception("Failed to create table");
         }
         WriteOneCell(fmt::format("Table created with id = {}", info->oid_), writer);
-        LOG_DEBUG("Page Id %d" , info->table_->GetFirstPageId());
+        // LOG_DEBUG("Page Id %d" , info->table_->GetFirstPageId());
         continue;
       }
       case StatementType::INDEX_STATEMENT: {
@@ -324,7 +324,7 @@ auto BustubInstance::ExecuteSqlTxn(const std::string &sql, ResultWriter &writer,
 
     // Execute the query.
     auto exec_ctx = MakeExecutorContext(txn);
-    std::vector<Tuple> result_set{};
+    std::vector<Tuple*> result_set{};
     is_successful &= execution_engine_->Execute(optimized_plan, &result_set, txn, exec_ctx.get());
 
     // Return the result set as a vector of string.
@@ -342,9 +342,14 @@ auto BustubInstance::ExecuteSqlTxn(const std::string &sql, ResultWriter &writer,
     for (const auto &tuple : result_set) {
       writer.BeginRow();
       for (uint32_t i = 0; i < schema.GetColumnCount(); i++) {
-        writer.WriteCell(tuple.GetValue(&schema, i).ToString());
+      
+        writer.WriteCell(tuple->GetValue(&schema, i).ToString());
       }
       writer.EndRow();
+    }
+    for ( Tuple * tuple : result_set) {
+      delete tuple;
+      LOG_DEBUG("%s", "REMOVINGGGG");
     }
     writer.EndTable();
   }

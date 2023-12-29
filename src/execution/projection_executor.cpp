@@ -1,6 +1,5 @@
 #include "execution/executors/projection_executor.h"
-#include "storage/table/tuple.h"
-
+ 
 namespace bustub {
 
 ProjectionExecutor::ProjectionExecutor(ExecutorContext *exec_ctx, const ProjectionPlanNode *plan,
@@ -12,11 +11,12 @@ void ProjectionExecutor::Init() {
   child_executor_->Init();
 }
 
-auto ProjectionExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  Tuple child_tuple{};
-
+auto ProjectionExecutor::Next(Tuple **tuple, RID *rid) -> bool {
+ 
+   Tuple **child_tuple = new Tuple*[1];
+    *child_tuple = nullptr;
   // Get the next tuple
-  const auto status = child_executor_->Next(&child_tuple, rid);
+  const auto status = child_executor_->Next(child_tuple, rid);
 
   if (!status) {
     return false;
@@ -26,11 +26,15 @@ auto ProjectionExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   std::vector<Value> values{};
   values.reserve(GetOutputSchema().GetColumnCount());
   for (const auto &expr : plan_->GetExpressions()) {
-    values.push_back(expr->Evaluate(&child_tuple, child_executor_->GetOutputSchema()));
+    values.push_back(expr->Evaluate(*child_tuple, child_executor_->GetOutputSchema()));
   }
 
-  *tuple = Tuple{values, &GetOutputSchema()};
+  *tuple = new TupleRecord(values, &GetOutputSchema());
 
+  if (*child_tuple != nullptr) {
+    delete *child_tuple;
+    }
+    delete []child_tuple;
   return true;
 }
 }  // namespace bustub

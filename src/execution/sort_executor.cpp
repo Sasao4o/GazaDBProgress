@@ -9,10 +9,11 @@ SortExecutor::SortExecutor(ExecutorContext *exec_ctx, const SortPlanNode *plan,
 void SortExecutor::Init() { 
     child_executor_->Init();
     tuples.clear();
-    Tuple childTuple;
+         Tuple **childTuple = new Tuple*[1];
+ 
     RID childRid;
-    while (child_executor_->Next(&childTuple, &childRid)) {
-        tuples.push_back(childTuple);
+    while (child_executor_->Next(childTuple, &childRid)) {
+        tuples.push_back(**childTuple);
     }
 auto cmpLambda = [orderByArr = plan_->GetOrderBy(),childSchema = child_executor_->GetOutputSchema() ](Tuple &a, Tuple &b) {
  
@@ -56,10 +57,13 @@ auto cmpLambda = [orderByArr = plan_->GetOrderBy(),childSchema = child_executor_
 //     }
 //     return false;
 // }
-auto SortExecutor::Next(Tuple *tuple, RID *rid) -> bool {  
+auto SortExecutor::Next(Tuple **tuple, RID *rid) -> bool {  
     if (iter_ == tuples.end()) return false;
-    *tuple = *iter_;
-    *rid = tuple->GetRid();
+    Tuple * tupleV = new Tuple();
+    *tupleV = *iter_;
+    *tuple = tupleV;
+    
+    *rid = (*tuple)->GetRid();
     ++iter_;
     return true;
 

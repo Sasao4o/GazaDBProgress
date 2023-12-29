@@ -39,7 +39,7 @@ class IndexScanExecutor : public AbstractExecutor {
 
   void Init() override;
 
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
  private:
   /** The index scan plan node to be executed. */

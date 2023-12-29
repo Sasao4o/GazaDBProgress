@@ -13,7 +13,7 @@ void FilterExecutor::Init() {
   child_executor_->Init();
 }
 
-auto FilterExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+auto FilterExecutor::Next(Tuple **tuple, RID *rid) -> bool {
   auto filter_expr = plan_->GetPredicate();
 
   while (true) {
@@ -24,7 +24,7 @@ auto FilterExecutor::Next(Tuple *tuple, RID *rid) -> bool {
       return false;
     }
 
-    auto value = filter_expr->Evaluate(tuple, child_executor_->GetOutputSchema());
+    auto value = filter_expr->Evaluate(*tuple, child_executor_->GetOutputSchema());
     if (!value.IsNull() && value.GetAs<bool>()) {
       return true;
     }

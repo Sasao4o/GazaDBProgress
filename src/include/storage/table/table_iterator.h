@@ -32,7 +32,7 @@ class TableIterator {
   TableIterator(TableHeap *table_heap, RID rid, Transaction *txn);
 
   TableIterator(const TableIterator &other)
-      : table_heap_(other.table_heap_), tuple_(new Tuple(*other.tuple_)), txn_(other.txn_) {}
+      : table_heap_(other.table_heap_), tuple_(new TupleRecord(*other.tuple_)), txn_(other.txn_) {}
 
   ~TableIterator() { delete tuple_; }
 
@@ -42,9 +42,9 @@ class TableIterator {
 
   inline auto operator!=(const TableIterator &itr) const -> bool { return !(*this == itr); }
 
-  auto operator*() -> const Tuple &;
+  auto operator*() -> const TupleRecord &;
 
-  auto operator->() -> Tuple *;
+  auto operator->() -> TupleRecord *;
 
   auto operator++() -> TableIterator &;
 
@@ -59,7 +59,7 @@ class TableIterator {
 
  private:
   TableHeap *table_heap_;
-  Tuple *tuple_;
+  TupleRecord *tuple_;
   Transaction *txn_;
 };
 

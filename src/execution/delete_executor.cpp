@@ -37,15 +37,16 @@ void DeleteExecutor::Init() {
   }
 }
 
-auto DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
+auto DeleteExecutor::Next([[maybe_unused]] Tuple **tuple, RID *rid) -> bool {
   TableInfo *table_info = GetExecutorContext()->GetCatalog()->GetTable(plan_->TableOid());
   Transaction *tx = GetExecutorContext()->GetTransaction();
   TableHeap *table_heap = table_info->table_.get();
   std::vector<IndexInfo *> index_info_vector = GetExecutorContext()->GetCatalog()->GetTableIndexes(table_info->name_);
 
-  Tuple child_tuple{};
+     Tuple **childTuple = new Tuple*[1];
+     *childTuple = nullptr;
   int size = 0;
-  while (child_executor_->Next(&child_tuple, rid)) {
+  while (child_executor_->Next(childTuple, rid)) {
     // acquire the row lock
     try {
       bool is_locked = GetExecutorContext()->GetLockManager()->LockRow(
@@ -61,18 +62,23 @@ auto DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
 
     for (auto &index_info : index_info_vector) {
       index_info->index_->DeleteEntry(
-          child_tuple.KeyFromTuple(table_info->schema_, index_info->key_schema_, index_info->index_->GetKeyAttrs()),
+          (*childTuple)->KeyFromTuple(table_info->schema_, index_info->key_schema_, index_info->index_->GetKeyAttrs()),
           *rid, tx);
     }
 
     size++;
   }
+  
+
+    delete *childTuple;
+    delete []childTuple;
+
 
   std::vector<Value> values{};
   values.reserve(GetOutputSchema().GetColumnCount());
   values.emplace_back(INTEGER, size);
-
-  *tuple = Tuple{values, &GetOutputSchema()};
+  
+  *tuple = new Tuple(values, &GetOutputSchema());
 
   if (size == 0 && !called_) {
     called_ = true;

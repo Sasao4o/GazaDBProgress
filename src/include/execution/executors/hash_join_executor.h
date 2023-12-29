@@ -46,7 +46,7 @@ class HashJoinExecutor : public AbstractExecutor {
    * @param[out] rid The next tuple RID, not used by hash join.
    * @return `true` if a tuple was produced, `false` if there are no more tuples.
    */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the join */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };

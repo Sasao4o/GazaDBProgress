@@ -46,7 +46,7 @@ class NestIndexJoinExecutor : public AbstractExecutor {
 
   void Init() override;
 
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(Tuple **tuple, RID *rid) -> bool override;
 
  private:
   /** The nested index join plan node. */
